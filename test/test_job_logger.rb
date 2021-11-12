@@ -93,4 +93,22 @@ class TestJobLogger < Minitest::Test
     log_level_warning = @output.string.lines[0]
     assert_match(/WARN: Invalid log level/, log_level_warning)
   end
+
+  def test_custom_job_logger_level_for_internal_logs
+    logger = Sidekiq::Logger.new(@output, level: :debug)
+    jl = Sidekiq::JobLogger.new(logger, {job_logger_internal_log_level: "debug"})
+    job = {"class"=>"FooWorker"}
+
+    assert logger.debug?
+    jl.prepare(job) do
+      jl.call(job, "queue") do
+        logger.info("info message")
+      end
+    end
+
+    a, b, c = @output.string.lines
+    assert_match(/DEBUG: start/, a)
+    assert_match(/INFO: info message/, b)
+    assert_match(/DEBUG: done/, c)
+  end
 end

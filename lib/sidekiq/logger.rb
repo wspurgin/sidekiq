@@ -31,6 +31,19 @@ module Sidekiq
       nil
     end
 
+    def self.normalize_level(other)
+      case other
+      when Integer
+        other
+      when Symbol, String
+        LEVELS[other.to_s]
+      when nil
+        nil
+      else
+        raise ArgumentError, "Invalid log level: #{other.inspect}"
+      end
+    end
+
     def debug?
       level <= 0
     end
@@ -56,16 +69,7 @@ module Sidekiq
     end
 
     def local_level=(level)
-      case level
-      when Integer
-        Thread.current[:sidekiq_log_level] = level
-      when Symbol, String
-        Thread.current[:sidekiq_log_level] = LEVELS[level.to_s]
-      when nil
-        Thread.current[:sidekiq_log_level] = nil
-      else
-        raise ArgumentError, "Invalid log level: #{level.inspect}"
-      end
+      Thread.current[:sidekiq_log_level] = LoggingUtils.normalize_level(level)
     end
 
     def level

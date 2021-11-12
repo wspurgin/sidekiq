@@ -2,22 +2,24 @@
 
 module Sidekiq
   class JobLogger
-    def initialize(logger = Sidekiq.logger)
+    def initialize(logger = Sidekiq.logger, options = {})
       @logger = logger
+      @options = options
+      @job_logger_level = Sidekiq::LoggingUtils.normalize_level(options[:job_logger_internal_log_level] || :info)
     end
 
     def call(item, queue)
       start = ::Process.clock_gettime(::Process::CLOCK_MONOTONIC)
-      @logger.info("start")
+      @logger.add(@job_logger_level, "start")
 
       yield
 
       with_elapsed_time_context(start) do
-        @logger.info("done")
+        @logger.add(@job_logger_level, "done")
       end
     rescue Exception
       with_elapsed_time_context(start) do
-        @logger.info("fail")
+        @logger.add(@job_logger_level, "fail")
       end
 
       raise

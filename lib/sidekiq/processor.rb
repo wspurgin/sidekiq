@@ -36,7 +36,7 @@ module Sidekiq
       @thread = nil
       @strategy = options[:fetch]
       @reloader = options[:reloader] || proc { |&block| block.call }
-      @job_logger = (options[:job_logger] || Sidekiq::JobLogger).new
+      @job_logger = (options[:job_logger] || Sidekiq::JobLogger).new(logger, options)
       @retrier = Sidekiq::JobRetry.new
     end
 
